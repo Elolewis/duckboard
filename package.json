@@ -1,5 +1,5 @@
 {
-  "name": "app.py",
+  "name": "duckboard",
   "version": "0.1.0",
   "main": "./build/electron/main.js",
   "scripts": {
@@ -13,7 +13,9 @@
     "files": ["build/**/*"],
     "directories": {
       "buildResources": "assets"
-    }
+    },
+    "icon": "assets/icon.png"
+
   },
   "devDependencies": {
     "@stlite/desktop": "^0.79.5",
@@ -23,9 +25,11 @@
   },
   "stlite": {
     "desktop": {
-      "files": ["app.py", "pages/*.py", "assets", ".streamlit/config.toml"],
+      "embed": true,
+      "idbfsMountpoints": ["/mnt"],
+      "files": ["DuckBoard.py", "pages/*.py", "assets", ".streamlit/config.toml"],
       "dependencies": ["duckdb"],
-      "entrypoint": "app.py"
+      "entrypoint": "DuckBoard.py"
     }
   }
 }
