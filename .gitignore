@@ -4,6 +4,7 @@ __pycache__/
 *.pyc
 python_embed
 build/
+dist/
 node_modules/
 run_main.spec
 package-lock.json
