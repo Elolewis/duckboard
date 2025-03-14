@@ -10,15 +10,16 @@
     "postinstall": "electron-builder install-app-deps"
   },
   "build": {
-    "files": ["build/**/*"],
+    "files": [
+      "build/**/*"
+    ],
     "directories": {
       "buildResources": "assets"
     },
     "icon": "assets/icon.png"
-
   },
   "devDependencies": {
-    "@stlite/desktop": "^0.79.5",
+    "@stlite/desktop": "^0.79.6",
     "cross-env": "^7.0.3",
     "electron": "34.3.0",
     "electron-builder": "^25.1.8"
@@ -26,9 +27,18 @@
   "stlite": {
     "desktop": {
       "embed": true,
-      "idbfsMountpoints": ["/mnt"],
-      "files": ["DuckBoard.py", "pages/*.py", "assets", ".streamlit/config.toml"],
-      "dependencies": ["duckdb"],
+      "idbfsMountpoints": [
+        "/mnt"
+      ],
+      "files": [
+        "DuckBoard.py",
+        "pages/*.py",
+        "assets",
+        ".streamlit/config.toml"
+      ],
+      "dependencies": [
+        "duckdb"
+      ],
       "entrypoint": "DuckBoard.py"
     }
   }
