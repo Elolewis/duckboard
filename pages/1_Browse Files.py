@@ -1,14 +1,18 @@
 import streamlit as st
 import pandas as pd
+import duckdb
+import io
 
 def data_reader(file):
     """Read the data from the file."""
+    file_type = file.name.split(".")[-1].lower()
+
     if file.type == "text/csv":
         return pd.read_csv(file), "csv"
     elif file.type == "text/xlsx":
         return pd.read_excel(file), "xlsx"
-    elif file.type == "application/octet-stream":
-        return pd.read_parquet(file), "parquet"
+    elif file_type == "parquet":
+        return duckdb.read_parquet(buffer), "parquet"
     else:
         return pd.DataFrame([]), "Unsupported file type"
     
