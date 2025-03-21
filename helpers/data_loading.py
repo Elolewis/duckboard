@@ -7,6 +7,7 @@ import pyarrow as pa
 import json
 import hashlib
 import itertools
+import io
 
 
 def load_cache(cache_file):
@@ -78,17 +79,35 @@ def data_reader(uploaded_file):
     file_bytes = uploaded_file.read()
 
     try:        
-        if file_type == "text/csv":
-            return pd.read_csv(uploaded_file, encoding="utf-8"), "csv"
+        if file_type in ["text/csv", "text/plain", "application/csv"]:
+            encoding_type = ["ISO-8859-1", "utf-8", "latin1"]
+            errors = []
+            for encoding in encoding_type:
+                try:
+                    df = pd.read_csv(io.BytesIO(file_bytes), encoding=encoding)
+                    return df, f"csv",encoding
+                except Exception as e:
+                    errors.append((encoding, str(e)))
+                    continue
+            return pd.DataFrame([]), f"Error: {errors}", ""
         elif file_type == 'application/octet-stream':
             try:
-                return pd.read_parquet(uploaded_file), "parquet"            
+                return pd.read_parquet(uploaded_file), "parquet", ""
             except Exception as e:
                 # Attempt to read as a partitioned dataset
-                return pd.DataFrame([]),"parquet partition"
+                return pd.DataFrame([]),"parquet partition", ""
         elif file_type in ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "text/xlsx"]:
-            return pd.read_excel(uploaded_file), "xlsx"
+            xl = pd.ExcelFile(uploaded_file)
+            sheet_names = xl.sheet_names
+            df_dict = {}
+            try:
+                uploaded_file.seek(0)  # Reset file pointer to the beginning
+                for sheet_name in sheet_names:
+                    df_dict[sheet_name] = pd.read_excel(uploaded_file, sheet_name=sheet_name)
+            except Exception as e:
+                return pd.DataFrame([]), f"Error reading excel file: {str(e)}", ""
+            return df_dict, "xlsx", ""
         else:
-            return pd.DataFrame([]), "Unsupported file type"
+            return pd.DataFrame([]), "Unsupported file type", ""
     except Exception as e:
-        return pd.DataFrame([]), f"Error: {str(e)}"
+        return pd.DataFrame([]), f"Error: {str(e)}", ""
