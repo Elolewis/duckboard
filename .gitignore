@@ -8,3 +8,4 @@ dist/
 node_modules/
 run_main.spec
 package-lock.json
+file_cache.json
