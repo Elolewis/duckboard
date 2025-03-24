@@ -17,10 +17,12 @@ def load_cache(cache_file):
             return json.load(f)
     return {"files": [], "tables": []}
 
-def save_cache(cache_file, files, tables):
+def save_cache(cache_file, tables):
     """Save session state file tracking to disk."""
+    # only save tables that are not Type = "Temporary"
+
     cache_data = {
-        "files": [{key: str(value) for key, value in file.items()} for file in files],
+        # "availablefiles": [{key: str(value) for key, value in file.items()} for file in files],
         "tables": [{key: str(value) for key, value in table.items()} for table in tables],
     }
     with open(cache_file, "w") as f:

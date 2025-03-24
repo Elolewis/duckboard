@@ -11,10 +11,11 @@ CACHE_FILE = "file_cache.json"
 
 def validate_full_path_and_update():
     changes = st.session_state.get("ppp_table_pending_changes", {})
-    ppp_table = st.session_state["ppp_table"].copy()
+    ppp_table = pd.DataFrame(st.session_state["ppp_table"]).copy()
 
     # 2. Handle added rows
     new_rows = changes.get("added_rows", [])
+    st.write("DEBUG: New rows:", new_rows)
     if new_rows:
         new_df = pd.DataFrame(new_rows)
         # Make sure all expected columns exist, fill in if missing
@@ -35,11 +36,12 @@ def validate_full_path_and_update():
             for col_name, new_value in row_data.items():
                 ppp_table.at[int(idx_str), col_name] = new_value
 
-                if col_name == "Full Path":
-                    v_result,d_result = validate_full_path(new_value)
+                if col_name == "Path":
+                    valid_res,path_res, type_res = validate_full_path(new_value)
                     # Update the 'Validation' column based on the validation result
-                    ppp_table.at[int(idx_str), "Validation"] = v_result
-                    ppp_table.at[int(idx_str), "Directory"] = d_result
+                    ppp_table.at[int(idx_str), "Validation"] = valid_res
+                    ppp_table.at[int(idx_str), "Path"] = path_res
+                    ppp_table.at[int(idx_str), "Type"] = type_res
 
     # 3. Handle deleted rows
     deleted_rows = changes.get("deleted_rows", [])
@@ -67,15 +69,15 @@ def validate_full_path_and_update():
 def validate_full_path(full_path: str):
     _path = Path(full_path).resolve()
     if not _path or str(_path).strip() == "":
-        return "Pending", ""
+        return "Pending", "", ""
     elif _path.exists():
         if _path.is_dir():
-            dir = _path
+            path_type = "Directory"
         else:
-            dir = _path.parent
-        return "Valid", str(dir)
+            path_type = "File"
+        return "Valid", str(_path), path_type
     else:
-        return "Invalid", ""
+        return "Invalid", "", ""
 
 def data_needs_validation():
     """Check for changes in the data editor."""
@@ -113,10 +115,11 @@ def file_Upload_Section():
 
             duplicate = dl.check_membership(
                 file_hash, "File Hash",
-                st.session_state["available_files"],st.session_state['uploaded_files'])
-            if duplicate:
-                st.warning(f"NOTE: File {uploaded_file.name} has already been added previously.")
-            else:
+                st.session_state["available_files"],
+                st.session_state['uploaded_files'],
+                st.session_state["pending_parquet_partitions"])
+            
+            if not duplicate:
                 if file_type == "parquet partition":
                     st.session_state["pending_parquet_partitions"].append(payload)
 
@@ -161,13 +164,6 @@ def file_Upload_Section():
                 else:
                     st.success(f"File {file_name} loaded successfully.")
 
-                        
-
-                # show the dataframe in the expander
-
-    # return uploaded_files
-
-
 
 def parquet_partition_handling():
     """Handle parquet partitioning."""
@@ -175,11 +171,11 @@ def parquet_partition_handling():
     if st.session_state["pending_parquet_partitions"]:
         with st.expander(f"#### 📁 {len(st.session_state['pending_parquet_partitions'])} Pending Parquet Partitions"):
             st.write("##### Parquet Partition Handling")
-
-            # if there is a pending parquet partition, initialize the table
+            
             if "ppp_table" not in st.session_state:
-                ppp_columns = ["File Name", "File Type", "File Size", "File Hash",'Validation', "Full Path", 'Table Name', 'Directory']
-                st.session_state["ppp_table"] = pd.DataFrame(columns=ppp_columns)
+                st.session_state["ppp_table"] = pd.DataFrame(
+                    st.session_state["pending_parquet_partitions"]
+                    ).head(0).copy()
 
             # if in debug mode, show the pending parquet partitions
             if debug_mode := st.session_state.get("debug_mode", False):
@@ -189,11 +185,10 @@ def parquet_partition_handling():
 
             # parse the pending parquet partitions tuple of file_id file_name into a dataframe
             selected_dirs_df = pd.DataFrame(
-                st.session_state["pending_parquet_partitions"],
-                columns=["File Name", "File Type", "File Size", "File Hash"]
+                st.session_state["pending_parquet_partitions"]
                 )
-            selected_dirs_df['Validation'] = "Pending"
-            selected_dirs_df[["Full Path", 'Table Name', 'Directory']] = ""
+            # selected_dirs_df['Validation'] = "Pending"
+            # selected_dirs_df[["Full Path", 'Table Name', 'Directory']] = ""
             
             st.session_state["ppp_table"] = pd.concat(
                 [
@@ -209,33 +204,40 @@ def parquet_partition_handling():
             st.data_editor(
                 st.session_state["ppp_table"],
                 use_container_width=True, 
-                disabled=["File Name", 'Directory', 'Validation'], 
+                disabled=["File Name", 'Validation'], 
                 column_config={
-                    "Full Path": st.column_config.TextColumn(
-                        help="Enter full path to file",
+                    "Path": st.column_config.TextColumn(
+                        help="Enter full path to file or parent directory",
                         default="",
                         required=True,
                         ),
-                    "Table Name": st.column_config.TextColumn(
+                    "Alias": st.column_config.TextColumn(
                         help="Enter table name",
                         default="",
                         required=True,
                         ),
                     },                
-                column_order=["File Name",  'Table Name', "Full Path", 'Validation'],
+                column_order=["File Name",  'Alias', "Path", 'Validation'],
                 num_rows='dynamic',
                 key="ppp_table_pending_changes",
                 on_change=data_needs_validation
                 )
+            
             colA, colB, colC = st.columns([1,3,1])
             with colA:
-                if st.button("Apply and Validate"):
-                    
-                    st.session_state["ppp_table"] = validate_full_path_and_update()
+                if st.button("Validate changes"):
+                    try:
+                        st.session_state["ppp_table"] = validate_full_path_and_update()
 
-                    if st.session_state["ppp_table"]["Validation"].eq("Valid").all():
-                        st.session_state['validated'] = True
-                    st.rerun()
+
+                        if st.session_state["ppp_table"]["Validation"].eq("Valid").all():
+                            st.session_state['validated'] = True
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error validating paths: {e}")
+                        st.session_state['validated'] = False
+            
+            st.session_state['validated']
             if st.session_state['validated']:
                 with colB:
                     st.success("All paths are valid.")
@@ -243,15 +245,15 @@ def parquet_partition_handling():
                 # Update the DataFrame with full paths
                     if st.button("Add to Tables"):
                         for _, row in st.session_state["ppp_table"].iterrows():
-                            if row.to_dict() not in st.session_state["tables"]:
-                                st.session_state["tables"].append(row.to_dict())
+                            if row.to_dict() not in st.session_state["available_files"]:
+                                st.session_state["available_files"].append(row.to_dict())
                                 row.to_dict()
                         
                         # 3. Clear out the processed directories
                         st.session_state["pending_parquet_partitions"] = []
                         st.session_state["ppp_table"] = []
            
-                        dl.save_cache(CACHE_FILE, st.session_state["files"], st.session_state["tables"])
+                        dl.save_cache(CACHE_FILE, st.session_state["available_files"])
                         st.rerun()
 
 
@@ -291,10 +293,10 @@ with tab1:
     st.write("##### Session Files")
     if st.session_state["available_files"]:
         # st.write(st.session_state["session_files"])
-        st.write(pd.DataFrame(st.session_state["available_files"]).columns)
+        # st.write(pd.DataFrame(st.session_state["available_files"]).columns)
         st.data_editor(st.session_state["available_files"], hide_index=True, 
-                       disabled=["File Name", "File Type"],
-                       column_order=["File Name", "Alias", "Path", "File Type"], num_rows='dynamic')
+                       disabled=["File Name", "File Type"], use_container_width=True,
+                       column_order=["File Name", "File Type", "Alias", "Path"], num_rows='dynamic')
         if st.button("Update session files (under development)"):
             pass
     else:
