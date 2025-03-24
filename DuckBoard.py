@@ -13,14 +13,12 @@ CACHE_FILE = "file_cache.json"
 if cache_loaded := st.session_state.get("cache_loaded", False) is False:
     cache = dl.load_cache(cache_file=CACHE_FILE)
 
-    st.session_state["files"] = cache["files"]
     st.session_state["tables"] = cache["tables"]
     st.session_state["pending_parquet_partitions"] = []
     st.session_state["pending_files"] = []
     st.session_state["available_files"] = []
     st.session_state['uploaded_files'] = [] 
 
-    # to remove?
     st.session_state["session_files"] = []    
     st.session_state["loaded_file_dfs"] = []
 
