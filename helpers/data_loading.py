@@ -1,9 +1,9 @@
 
 from pathlib import Path
 import pandas as pd
-from collections import Counter
-import pyarrow.parquet as pq
-import pyarrow as pa
+# from collections import Counter
+# import pyarrow.parquet as pq
+# import pyarrow as pa
 import json
 import hashlib
 import itertools
@@ -59,29 +59,29 @@ def check_membership(member, name="File Hash", *lists,):
     }
     return member in all_lists
 
-def rename_duplicates(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    If any columns are duplicated, rename them by appending a suffix _1, _2, etc.
-    """
-    counts = Counter()
-    new_cols = []
-    for col in df.columns:
-        counts[col] += 1
-        if counts[col] > 1:
-            new_cols.append(f"{col}_{counts[col]}")
-        else:
-            new_cols.append(col)
-    df.columns = new_cols
-    return df
+# def rename_duplicates(df: pd.DataFrame) -> pd.DataFrame:
+#     """
+#     If any columns are duplicated, rename them by appending a suffix _1, _2, etc.
+#     """
+#     counts = Counter()
+#     new_cols = []
+#     for col in df.columns:
+#         counts[col] += 1
+#         if counts[col] > 1:
+#             new_cols.append(f"{col}_{counts[col]}")
+#         else:
+#             new_cols.append(col)
+#     df.columns = new_cols
+#     return df
 
-def load_single_partition(file_bytes: bytes) -> pd.DataFrame:
-    """Reads a parquet file from bytes, then renames any duplicate columns."""
-    try:
-        table = pq.ParquetFile(pa.BufferReader(file_bytes).read_buffer()).read()
-    except Exception as e:
-        raise ValueError(f"Error reading parquet file: {str(e)}")
-    df = table.to_pandas()
-    return rename_duplicates(df)
+# def load_single_partition(file_bytes: bytes) -> pd.DataFrame:
+#     """Reads a parquet file from bytes, then renames any duplicate columns."""
+#     try:
+#         table = pq.ParquetFile(pa.BufferReader(file_bytes).read_buffer()).read()
+#     except Exception as e:
+#         raise ValueError(f"Error reading parquet file: {str(e)}")
+#     df = table.to_pandas()
+#     return rename_duplicates(df)
 
 
 def data_reader(uploaded_file):
