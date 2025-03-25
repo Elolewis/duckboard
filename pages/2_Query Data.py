@@ -85,9 +85,14 @@ with tab3:
         except Exception as e:
             # st.error(f"Error executing query: {e}")
             if data['File Type'] == "csv":
-                ref= f"sniff_csv({data['Path']})"
-                sample_query = f"SELECT * FROM {ref} LIMIT 100;"
-                preview_df = duckdb.sql(sample_query).to_df()
+                try:
+                    ref= f"sniff_csv('{data['Path']}')"
+                    sample_query = f"SELECT * FROM {ref} LIMIT 100;"
+                    preview_df = duckdb.sql(sample_query).to_df()
+                except Exception as e:
+                    ref = f"read_csv_auto('{data['Path']}')"
+                    sample_query = f"SELECT * FROM {ref} LIMIT 100;"
+                    preview_df = duckdb.sql(sample_query).to_df()
         
         schema_query = f"DESCRIBE {sample_query}"
         
