@@ -1,6 +1,6 @@
 {
   "name": "duckboard",
-  "version": "1.0.0",
+  "version": "1.0.0-beta",
   "main": "./build/electron/main.js",
   "scripts": {
     "dump": "dump-stlite-desktop-artifacts",
@@ -38,7 +38,13 @@
         ".streamlit/config.toml"
       ],
       "dependencies": [
-        "duckdb"
+        "streamlit",
+        "duckdb",
+        "pyarrow",
+        "altair",
+        "openpyxl",
+        "pandas",
+        "requests"
       ],
       "entrypoint": "DuckBoard.py"
     }
