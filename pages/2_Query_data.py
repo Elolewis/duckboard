@@ -2,8 +2,9 @@ import streamlit as st
 import pandas as pd
 import duckdb
 import re
+from helpers import data_loading as dl
 
-
+cache_file = "query_cache.json"
 from helpers.st_dev import developer_sidebar
 # developer_sidebar()
 
@@ -161,10 +162,15 @@ with tab1:
     
     with name_text_col:
         st.text_input("query_name", help = "(Optional) Enter a name for the saved query", key="saved_query_name")
+        query_name = st.session_state["saved_query_name"]
+
+        if query_name in st.session_state["saved_queries"]:
+            st.warning(f"Caution: this will overwriting an existing query '{query_name}'")
 
 
     with save_button_col:
         save_query_button = st.button("Save Query")
+        st.session_state["save_query_to_cache"] = st.checkbox("Save query to cache", value=False)
         if save_query_button:
             if st.session_state["saved_query_name"]:
                 # same query as key value with the name, query
@@ -172,9 +178,10 @@ with tab1:
                 
                 
                 st.session_state["saved_queries"][st.session_state["saved_query_name"]] = adj_user_query
+                if st.session_state["save_query_to_cache"]:
+                    dl.save_queries_to_cache(st.session_state["saved_queries"], cache_file)
                 st.success("Query saved successfully.")
                 st.rerun()
             else:
                 st.warning("No query to save.")
-        save_query_to_cache = st.checkbox("Save query to cache", value=False)
 

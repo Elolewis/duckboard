@@ -3,8 +3,8 @@ import pandas as pd
 from pathlib import Path
 from helpers import data_loading as dl
 import hashlib
-from helpers.st_dev import developer_sidebar
-developer_sidebar()
+# from helpers.st_dev import developer_sidebar
+# developer_sidebar()
 
 
 CACHE_FILE = "file_cache.json"

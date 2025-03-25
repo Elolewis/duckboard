@@ -28,6 +28,15 @@ def save_cache(cache_file, tables):
     with open(cache_file, "w") as f:
         json.dump(cache_data, f, indent=4)
 
+def save_queries_to_cache(queries: dict, cache_file: str):
+    with open(cache_file, "w") as f:
+        json.dump(queries, f, indent=2)
+def load_queries_from_cache(cache_file: str) -> dict:
+    import os
+    if os.path.exists(cache_file):
+        with open(cache_file, "r") as f:
+            return json.load(f)
+    return {}
 
 def get_file_hash(file):
     """Generate a hash for the file to check for duplicates."""
