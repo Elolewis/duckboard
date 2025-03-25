@@ -80,7 +80,7 @@ def validate_full_path(full_path: str):
             path_type = "Directory"
         else:
             path_type = "File"
-        return "Valid", str(_path), path_type
+        return "Valid", _path.as_posix(), path_type
     else:
         return "Invalid", "", ""
 
@@ -110,7 +110,7 @@ def file_Upload_Section():
                 "File Type": file_type,
                 "Encoding": encoding,
                 "Type": "Temporary",
-                # "Location": "In-memory",
+                "Location": "In-memory",
                 'Validation': "Pending",
                 "Path": "",
                 'Alias': "",
@@ -314,7 +314,17 @@ if st.session_state["available_files"]:
                 all_files.at[idx, "Validation"] = valid_res
                 all_files.at[idx, "Path"] = path_res
                 all_files.at[idx, "Type"] = type_res
-                # st.write(f"{valid_res}, {path_res}, {type_res}")
+
+                
+                if type_res == "File":
+                    all_files.at[idx, "Reference"] = f"read_{row["File Type"]}('{path_res}')"
+                elif type_res == "Directory":
+                    dir_path = (Path(path_res) / "*.parquet").resolve().as_posix()
+                    all_files.at[idx, "Reference"] = f"read_parquet('{dir_path}')"
+                else:
+                    if row["Alias"] == "":
+                        all_files.at[idx, "Alias"] = row["File Name"]
+                    all_files.at[idx, "Reference"] = row["Alias"]
 
                 if valid_res == "Valid":
                     all_files.at[idx, "df"] = ""
@@ -343,3 +353,5 @@ if st.session_state["available_files"]:
         )
 else:
     st.write("No session files added.")
+
+st.dataframe(st.session_state["available_files"], use_container_width=True)
