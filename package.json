@@ -1,6 +1,6 @@
 {
   "name": "duckboard",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "main": "./build/electron/main.js",
   "scripts": {
     "dump": "dump-stlite-desktop-artifacts",
@@ -16,7 +16,7 @@
     "directories": {
       "buildResources": "assets"
     },
-    "icon": "assets/icon.png"
+    "icon": "assets/duckboard.ico.png"
   },
   "devDependencies": {
     "@stlite/desktop": "^0.79.6",
@@ -33,6 +33,7 @@
       "files": [
         "DuckBoard.py",
         "pages/*.py",
+        "helpers/*.py",
         "assets",
         ".streamlit/config.toml"
       ],
