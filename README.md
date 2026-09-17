@@ -70,3 +70,18 @@ To customize the packaged application (icon and similar), follow the
 [electron-builder](https://www.electron.build/) instructions.
 
 ## Project layout
+DuckBoard.py # entry point and landing page
+pages/1_Manage Files.py # file loading, schema review, alias assignment, partition handling
+pages/2_Query Data.py # SQL editor, alias expansion, saved queries, results
+pages/3_Custom Scripts.py # dynamic loading of user Python pages
+helpers/data_loading.py # caching, hashing, file and query persistence
+extensions/ # example custom script page
+
+
+## Status
+
+Working personal project, actively usable. Built with DuckDB, Streamlit, and Electron.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
